@@ -1,0 +1,13 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+identifier: kkm_c2_nrf82805
+name: KKM C2 nrf82805 beacon
+type: mcu
+arch: arm
+ram: 24
+flash: 192
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools

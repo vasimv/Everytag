@@ -1,0 +1,5 @@
+board:
+  name: kkm_p1_nrf52810
+  vendor: KKM
+  socs:
+    - name: nrf52810

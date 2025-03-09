@@ -1,0 +1,6 @@
+if BOARD_WB_20241007
+
+config BT_CTLR
+  default y if BT
+
+endif

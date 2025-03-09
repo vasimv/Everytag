@@ -1,0 +1,103 @@
+/dts-v1/;
+#include <nordic/nrf52810_qfaa.dtsi>
+
+/ {
+	model = "kkm_p11_nrf52810";
+	compatible = "KKM,kkm-p11-nrf52810";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+	};
+  leds {
+    compatible = "gpio-leds";
+    led0: led_0 {
+      gpios = <&gpio0 12 GPIO_ACTIVE_HIGH>;
+      label = "led";
+    };
+  };
+  zephyr,user {
+    io-channels = <&adc 0>;
+  };
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x00000000 DT_SIZE_K(48)>;
+		};
+
+		slot0_partition: partition@c000 {
+			label = "image-0";
+			reg = <0x0000c000 DT_SIZE_K(56)>;
+		};
+
+		slot1_partition: partition@1a000 {
+			label = "image-1";
+			reg = <0x0001a000 DT_SIZE_K(56)>;
+		};
+
+		storage_partition: partition@28000 {
+			label = "storage";
+			reg = <0x00028000 DT_SIZE_K(32)>;
+		};
+
+	};
+};
+
+&reg {
+    regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
+};
+
+&uicr {
+  gpio-as-nreset;
+};
+
+&gpiote {
+  status = "okay";
+};
+
+&gpio0 {
+  status = "okay";
+};
+
+&rtc1 {
+  status = "disabled";
+};
+
+&rtc0 {
+  status = "okay";
+};
+
+&timer0 {
+  status = "disabled";
+};
+
+&wdt {
+  status = "okay";
+};
+
+&adc {
+  #address-cells = <1>;
+  #size-cells = <0>;
+  status="okay";
+
+  channel@0 {
+    reg = <0>;
+    zephyr,gain = "ADC_GAIN_1_6";
+    zephyr,reference = "ADC_REF_INTERNAL";
+    zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+    zephyr,input-positive = <NRF_SAADC_VDD>;
+    zephyr,resolution = <14>;
+    zephyr,oversampling = <8>;
+  };
+
+  zephyr,pm-device-runtime-auto;
+};
+

@@ -1,0 +1,20 @@
+{
+    "version": 2,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 20
+    },
+    "configurePresets": [
+        {
+            "name": "KKM_C2_DEBUG",
+            "displayName": "Build for kkm_c2_nrf82805",
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/KKM_C2_DEBUG",
+            "cacheVariables": {
+                "NCS_TOOLCHAIN_VERSION": "NONE",
+                "BOARD": "kkm_c2_nrf82805/nrf52805",
+                "CONF_FILE": "prj-smpsvr.conf"
+            }
+        }
+    ]
+}

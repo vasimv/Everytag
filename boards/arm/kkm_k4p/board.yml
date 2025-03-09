@@ -1,0 +1,5 @@
+board:
+  name: kkm_k4p
+  vendor: KKM
+  socs:
+  - name: nrf52833

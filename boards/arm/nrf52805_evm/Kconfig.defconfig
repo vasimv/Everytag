@@ -1,0 +1,6 @@
+if BOARD_NRF52805_EVM
+
+config BOARD
+  default "nrf52805_evm"
+
+endif

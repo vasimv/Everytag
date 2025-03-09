@@ -1,0 +1,5 @@
+board:
+  name: wb_20241125
+  vendor: XMLShop
+  socs:
+  - name: nrf52833

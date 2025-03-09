@@ -1,0 +1,9 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+if BOARD_WB_20241125
+
+config BOARD
+  default "wb_20241125"
+
+endif

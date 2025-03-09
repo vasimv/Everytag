@@ -1,0 +1,8 @@
+if BOARD_KKM_P1_NRF52810
+
+config BT_CTLR
+  bool "BT_CTLR"
+  default y if BT
+
+endif
+

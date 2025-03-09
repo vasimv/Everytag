@@ -1,0 +1,13 @@
+identifier: kkm_p11_nrf52810
+name: KKM_P11_NRF52810
+vendor: KKM
+type: mcu
+arch: arm
+ram: 24
+flash: 192
+toolchain:
+  - zephyr
+  - gnuarmemb
+  - xtools
+supported:
+  - gpio

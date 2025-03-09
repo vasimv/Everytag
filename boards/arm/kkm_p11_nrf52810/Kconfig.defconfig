@@ -1,0 +1,6 @@
+if BOARD_KKM_P11_NRF52810
+
+config BOARD
+  default "kkm_p11_nrf52810"
+
+endif # BOARD_KKM_P11_NRF52810

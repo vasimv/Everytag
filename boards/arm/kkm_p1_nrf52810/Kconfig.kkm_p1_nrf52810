@@ -1,0 +1,3 @@
+config BOARD_KKM_P1_NRF52810
+  bool "kkm_p1_nrf52810 board"
+	select SOC_NRF52810_QFAA

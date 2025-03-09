@@ -1,0 +1,6 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_KKM_C2_NRF82805
+	bool "KKM C2 nrf52805 beacon"
+	select SOC_NRF52805_CAAA

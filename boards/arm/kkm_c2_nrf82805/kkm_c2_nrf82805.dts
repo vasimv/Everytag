@@ -1,0 +1,100 @@
+// Copyright (c) 2024 Nordic Semiconductor ASA
+// SPDX-License-Identifier: Apache-2.0
+
+/dts-v1/;
+#include <nordic/nrf52805_caaa.dtsi>
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+
+/ {
+	model = "KKM C2 nrf82805 beacon";
+	compatible = "kkm-c2,kkm-c2-nrf82805";
+
+	chosen {
+		zephyr,sram = &sram0;
+		zephyr,flash = &flash0;
+		zephyr,code-partition = &slot0_partition;
+	};
+
+	leds {
+		compatible = "gpio-leds";
+		led0: led_0 {
+			gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
+			label = "led";
+		};
+	};
+
+  zephyr,user {
+    io-channels = <&adc 0>;
+  };
+};
+
+&flash0 {
+	partitions {
+		compatible = "fixed-partitions";
+		#address-cells = <1>;
+		#size-cells = <1>;
+
+		boot_partition: partition@0 {
+			label = "mcuboot";
+			reg = <0x0 0xc000>;
+		};
+		slot0_partition: partition@c000 {
+			label = "image-0";
+			reg = <0xc000 0xa000>;
+		};
+		slot1_partition: partition@16000 {
+			label = "image-1";
+			reg = <0x16000 0xa000>;
+		};
+		scratch_partition: partition@20000 {
+			label = "image-scratch";
+			reg = <0x20000 0xa000>;
+		};
+		storage_partition: partition@2a000 {
+			label = "storage";
+			reg = <0x2a000 0x6000>;
+		};
+	};
+};
+
+&reg {
+    regulator-initial-mode = <NRF5X_REG_MODE_DCDC>;
+};
+
+&uicr {
+	gpio-as-nreset;
+};
+&gpiote {
+	status = "okay";
+};
+
+&gpio0 {
+	status = "okay";
+};
+
+&bprot {
+	status = "disabled";
+};
+
+&wdt {
+  status = "okay";
+};
+
+&adc {
+  #address-cells = <1>;
+  #size-cells = <0>;
+  status="okay";
+
+  channel@0 {
+    reg = <0>;
+    zephyr,gain = "ADC_GAIN_1_6";
+    zephyr,reference = "ADC_REF_INTERNAL";
+    zephyr,acquisition-time = <ADC_ACQ_TIME_DEFAULT>;
+    zephyr,input-positive = <NRF_SAADC_VDD>;
+    zephyr,resolution = <14>;
+    zephyr,oversampling = <8>;
+  };
+
+  zephyr,pm-device-runtime-auto;
+};
+
