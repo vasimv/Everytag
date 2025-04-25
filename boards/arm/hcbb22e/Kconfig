@@ -1,0 +1,6 @@
+if BOARD_HCBB22E
+
+config BT_CTLR
+  default y if BT
+
+endif

@@ -1,0 +1,6 @@
+# Copyright (c) 2024 Nordic Semiconductor ASA
+# SPDX-License-Identifier: Apache-2.0
+
+config BOARD_HCBB22E
+	bool "hcbb22e"
+	select SOC_NRF52832_QFAA
