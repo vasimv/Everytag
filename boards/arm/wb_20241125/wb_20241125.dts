@@ -19,12 +19,12 @@
 	leds {
 		compatible = "gpio-leds";
 		led0: led_0 {
-			gpios = <&gpio0 4 GPIO_ACTIVE_LOW>;
+			gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
 			label = "led";
 		};
     // Defined CD pin input as LED for simplifying things
     bq2512x_cd: led_1 {
-      gpios = <&gpio0 17 GPIO_ACTIVE_LOW>;
+      gpios = <&gpio0 17 GPIO_ACTIVE_HIGH>;
       label = "bq2512x CD pin";
     };
 	};

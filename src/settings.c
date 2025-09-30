@@ -32,8 +32,9 @@ int txPower = 0;
 int changeInterval = 600;
 int needsReset = 0;
 int pauseUpload = 0;
-int statusFlags = 0x448000;
+int statusFlags = 0x438000;
 int64_t timeOffset = 0;
+int accelThreshold = 0;
 
 // Airtag keys
 int numKeys = ARRAY_SIZE(default_airtag_key);
@@ -107,6 +108,11 @@ static const struct bt_uuid_128 status_uuid = BT_UUID_INIT_128(
   BT_UUID_128_ENCODE(0x8c5debe5, 0xad8d, 0x4810, 0xa31f, 0x53862e79ee77)
 );
 
+static const struct bt_uuid_128 accel_uuid = BT_UUID_INIT_128(
+  // 8c5debe6-ad8d-4810-a31f-53862e79ee77
+  BT_UUID_128_ENCODE(0x8c5debe6, 0xad8d, 0x4810, 0xa31f, 0x53862e79ee77)
+);
+
 // 5cfce313-a7e3-45c3-933d-418b8100da7f
 #define BEACON_SERVICE_UUID_VAL BT_UUID_128_ENCODE(0x5cfce313, 0xa7e3, 0x45c3, 0x933d, 0x418b8100da7f)
 
@@ -136,6 +142,7 @@ int updateKeysAtDisconnect = 0;
 #define ID_timeOffset_NVS 0x09
 #define ID_settingsMAC_NVS 0x0a
 #define ID_status_NVS 0x0b
+#define ID_accel_NVS 0x0c
 
 // GAP callbacks
 static void connected(struct bt_conn *conn, uint8_t err) {
@@ -307,6 +314,22 @@ static ssize_t chrc_write_status(struct bt_conn *conn,
   return len;
 }
 
+static ssize_t chrc_write_accel(struct bt_conn *conn,
+                                const struct bt_gatt_attr *attr, const void *buf,
+                                uint16_t len, uint16_t offset, uint8_t flags) {
+  printk("chrc_write_accel %04x %04x\n", len, ((int32_t *)buf)[0]);
+  int32_t var = *((uint32_t *)buf);
+  if (len != sizeof(int32_t))
+    return BT_GATT_ERR(BT_ATT_ERR_INVALID_ATTRIBUTE_LEN);
+  if (allowedChange && (var >= 0) && (var < 16384)) {
+    accelThreshold = *((int32_t *)buf);
+    (void) nvs_write(&fs, ID_accel_NVS, &accelThreshold, sizeof(accelThreshold));
+    needsReset = 1;
+    pauseUpload = 0;
+  }
+  return len;
+}
+
 static ssize_t chrc_write_txPower(struct bt_conn *conn,
                                const struct bt_gatt_attr *attr, const void *buf,
                                uint16_t len, uint16_t offset, uint8_t flags) {
@@ -436,6 +459,10 @@ BT_GATT_SERVICE_DEFINE(
     BT_GATT_CHRC_WRITE,
     BT_GATT_PERM_WRITE,
     NULL, chrc_write_status, NULL),
+  BT_GATT_CHARACTERISTIC(&accel_uuid.uuid,
+    BT_GATT_CHRC_WRITE,
+    BT_GATT_PERM_WRITE,
+    NULL, chrc_write_accel, NULL),
 );
 
 // Read variable from NVS
@@ -491,9 +518,11 @@ int init_settings() {
   my_nvs_read(ID_period_NVS, &multPeriod, sizeof(multPeriod));
   my_nvs_read(ID_power_NVS, &txPower, sizeof(txPower));
   my_nvs_read(ID_status_NVS, &statusFlags, sizeof(statusFlags));
+  my_nvs_read(ID_accel_NVS, &accelThreshold, sizeof(accelThreshold));
   my_nvs_read(ID_changeInterval_NVS, &changeInterval, sizeof(changeInterval));
   changeInterval = changeInterval - (changeInterval % 8);
   my_nvs_read(ID_auth_NVS, authCode, sizeof(authCode));
+
   // Load keys from NVS storage and check for number of keys in it
   if (!my_nvs_read(ID_key_NVS, keys_storage, sizeof(keys_storage))) {
     int i;

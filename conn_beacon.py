@@ -25,6 +25,8 @@ ap.add_argument("-d", "--delay", required=False, help="Delay between broadcasts 
 ap.add_argument("-r", "--readtime", required=False, help="Read current time on beacon (1 as argument)")
 ap.add_argument("-w", "--writetime", required=False, help="Write current time to beacon (1 as argument)")
 ap.add_argument("-l", "--interval", required=False, help="Interval between keys change in seconds")
+ap.add_argument("-s", "--statusbyte", required=False, help="Set status byte behaviour (hexadecimal), default is 438000")
+ap.add_argument("-m", "--movethreshold", required=False, help="Set threshold for movement detection (0 - turn off accelerometer)")
 ap.add_argument("-p", "--txpower", required=False, help="TX Power for broadcasts (0 - low power, 1 - normal power, 2 - high power")
 ap.add_argument("-k", "--keyfile", required=False, help="Binary public keys file(*_keyfile from generate_keys.py)")
 ap.add_argument("-f", "--fmdnkey", required=False, help="Google FMDN key (hex bytearray)")
@@ -149,6 +151,16 @@ if 'writetime' in args and args['writetime'] != None:
 if 'fmdnkey' in args and args['fmdnkey'] != None:
   fmdnkey = bytes.fromhex(args['fmdnkey'])
   peripheral.write_request(controlService, "8c5debe2-ad8d-4810-a31f-53862e79ee77", fmdnkey)
+
+# Write accelerometer threshold
+if 'movethreshold' in args and args['movethreshold'] != None:
+  valNum = int(args['movethreshold'])
+  peripheral.write_request(controlService, "8c5debe6-ad8d-4810-a31f-53862e79ee77", valNum.to_bytes(4, byteorder = 'little'))
+  
+# Write status byte behaviour
+if 'statusbyte' in args and args['statusbyte'] != None:
+  valNum = int(args['statusbyte'], 16)
+  peripheral.write_request(controlService, "8c5debe5-ad8d-4810-a31f-53862e79ee77", valNum.to_bytes(4, byteorder = 'little'))
 
 # New MAC address (in settings mode) 
 if 'newmacid' in args and args['newmacid'] != None:

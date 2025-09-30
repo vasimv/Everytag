@@ -388,7 +388,7 @@ void bq2512x_reinit(int forceFlag, int sysVoltage, int fastCharge, int preCharge
     bq2512x_activate();
     // Wait for transition timer from High-Z to active
     k_sleep(K_MSEC(2));
-    while ((ret = bq2512x_ts_disable()) < 0) {
+    while (((ret = bq2512x_ts_disable()) < 0) && (nAttempts > 0)) {
       k_sleep(K_MSEC(10));
       nAttempts--;
     }

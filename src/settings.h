@@ -24,6 +24,8 @@ extern int changeInterval;
 // 0x300000 - broadcast battery voltage as status in FMDN
 // 0x40000 - broadcast battery level (0..3) in airtag with first byte, binary OR
 // 0x400000 - broadcast battery level (1..3) in FMDN with second byte, binary OR
+// 0x50000 - every minute switch between broadcasting battery voltage, accelerometer and temperature in airtag
+// 0x500000 - every minute switch between broadcasting battery voltage, accelerometer and temperature in airtag
 extern int statusFlags;
 // needs to be reset after settings update
 extern int needsReset;
@@ -37,6 +39,9 @@ extern unsigned char (*currentKeys)[28];
 // Google Find My Device Network key
 extern unsigned char fmdnKey[20];
 
+// Accelerometer threshold to detect movements
+// If 0 - then don't use accelerometer even if present on board
+extern int accelThreshold;
 
 // MAC address in settings mode
 extern uint8_t settingsMAC[6];

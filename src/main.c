@@ -33,6 +33,9 @@
 #ifdef USE_BQ25121A
 #include "bq2512x.h"
 #endif
+#ifdef USE_LIS2DW12
+#include "lis2dw12.h"
+#endif
 
 #define BROADCAST_INTERVAL_MIN 1500 // 938ms
 #define BROADCAST_INTERVAL_MAX 1590 // 994ms
@@ -233,6 +236,38 @@ static uint8_t offline_finding_adv_template[] = {
 uint8_t airtag_data_store[sizeof(offline_finding_adv_template)];
 uint8_t fmdn_data_store[25];
 
+#ifdef USE_ACCELEROMETER
+
+// Make 7-bits array from accelerometer movements data
+int calc_accel_byte() {
+  int res = 0;
+  
+  // bit 0 - movements in 0..10 minutes
+  // bit 1 - in 10..30 minutes
+  // bit 2 - in 30..60 minutes
+  // bit 3 - in 1..3 hours
+  // bit 4 - in 3..6 hours
+  // bit 5 - in 6..12 hours
+  // bit 6 - in 12..24 hours
+  if (accel_movement(0, 10))
+    res |= 0x01;
+  if (accel_movement(10, 30))
+    res |= 0x02;
+  if (accel_movement(30, 60))
+    res |= 0x04;
+  if (accel_movement(60, 180))
+    res |= 0x08;
+  if (accel_movement(180, 360))
+    res |= 0x10;
+  if (accel_movement(360, 720))
+    res |= 0x20;
+  if (accel_movement(720, 1440))
+    res |= 0x40;
+    
+  return res;
+}
+#endif
+
 // Status byte behaviour
 // first two bytes - specific byte to broadcast as status for Airtag and FMDN
 // 0x10000 - broadcast first byte as status in airtag
@@ -243,6 +278,12 @@ uint8_t fmdn_data_store[25];
 // 0x300000 - broadcast battery voltage as status in FMDN
 // 0x40000 - broadcast battery level (0..3) in airtag with first byte, binary OR
 // 0x400000 - broadcast battery level (1..3) in FMDN with second byte, binary OR
+// 0x50000 - every minute switch between broadcasting battery voltage, accelerometer and temperature in airtag
+// 0x500000 - every minute switch between broadcasting battery voltage, accelerometer and temperature in airtag
+
+// What we're currently sending in status byte (with 0x50000 and 0x500000)
+// 0 - battery voltage, 1 - accelerometer, 2 - temperature
+static int what_in_status = 2;
 
 static int keys_changes = 0;
 
@@ -250,6 +291,10 @@ static int keys_changes = 0;
 void update_status_byte() {
   uint8_t statusAirtag, statusFmdn;
   int bAirtag, bFmdn;
+
+  what_in_status++;
+  if (what_in_status > 2)
+    what_in_status = 0;
 
   statusAirtag = statusFlags & 0xff;
   statusFmdn = (statusFlags & 0xff00) >> 8;
@@ -266,8 +311,27 @@ void update_status_byte() {
       statusAirtag = keys_changes & 0xff;
       break;
     case 3:
+    case 5:
       // Broadcast battery voltage in status byte
       statusAirtag = lastBatteryVoltage / 100;
+      if ((bAirtag == 3) || (what_in_status == 0))
+        break;
+      #ifdef USE_ACCELEROMETER
+      if (what_in_status == 1) {
+        statusAirtag = 0x80 | calc_accel_byte();
+        printk("update_status_byte: switching to acceldata %02x\n", (int) statusAirtag);
+      }
+      if (what_in_status == 2) {
+        // Send temperature in -10..53C range as positive 6-bit integer (-10 is 0, 53 is 63)
+        int tmpTemp = (accelTemperature + 5) / 10 + 10;
+        if (tmpTemp < 0)
+          tmpTemp = 0;
+        if (tmpTemp > 63)
+          tmpTemp = 63;
+        statusAirtag = 0x40 | tmpTemp;
+        printk("update_status_byte: switching to temperature %02x\n", (int) statusAirtag);
+      }
+      #endif
       break;
     case 4:
       // Broadcast battery status
@@ -301,8 +365,22 @@ void update_status_byte() {
       statusFmdn = keys_changes & 0xff;
       break;
     case 3:
+    case 5:
       // Broadcast battery voltage in status byte
       statusFmdn = lastBatteryVoltage / 100;
+      #ifdef USE_ACCELEROMETER
+      if (what_in_status == 1)
+        statusFmdn = 0x80 | calc_accel_byte();
+      if (what_in_status == 2) {
+        // Send temperature in -10..53C range as positive 6-bit integer (-10 is 0, 53 is 63)
+        int tmpTemp = (accelTemperature + 5) / 10 + 10;
+        if (tmpTemp < 0)
+          tmpTemp = 0;
+        if (tmpTemp > 63)
+          tmpTemp = 63;
+        statusFmdn = 0x40 | tmpTemp;
+      }
+      #endif
       break;
     case 4:
       // Broadcast battery status
@@ -362,11 +440,15 @@ void fill_adv_template_from_key(const char *key)
  */
 uint8_t setAdvertisementKey(const char *key, uint8_t **data)
 {
+  uint8_t status_save;
+
 	set_addr_from_key(key);
 	fill_adv_template_from_key(key);
 
 	*data = airtag_data_store;
+  status_save = airtag_data_store[6];
 	memcpy(*data, offline_finding_adv_template, sizeof(offline_finding_adv_template));
+  airtag_data_store[6] = status_save;
 	return sizeof(offline_finding_adv_template);
 }
 
@@ -522,9 +604,13 @@ void switch_airtag_key(int n) {
 // Currently there is no support for multiple FMDN keys,
 // so just prepare broadcast data for FMDN
 void switch_fmdn_key(int n) {
+  uint8_t status_save;
+
+  status_save = fmdn_data_store[23];
   memcpy(fmdn_data_store, adv_fmdn[1].data, adv_fmdn[1].data_len);
   memcpy(fmdn_data_store + 3, fmdnKey, sizeof(fmdnKey));
   adv_fmdn[1].data = fmdn_data_store;
+  fmdn_data_store[23] = status_save;
 }
 
 // Update battery voltage in iBeacon packet
@@ -556,6 +642,10 @@ uint32_t tLastSettingsMode = 0;
 uint32_t tLastMaxPower = 0;
 uint32_t tEndMaxPower = 0;
 uint32_t tLastAirtagSwitch = 0;
+#ifdef USE_ACCELEROMETER
+uint32_t tLastAccelRead = 0;
+uint32_t tLastAccelReset = 0;
+#endif
 
 int main(void)
 {
@@ -582,6 +672,14 @@ int main(void)
 	k_sleep(K_MSEC(10));
 	bq2512x_reinit(1, SYS_VOLTAGE, CHARGE_CURRENT, PRECHARGE_CURRENT);
 #endif
+#ifdef USE_ACCELEROMETER
+  for (int i = 0; i < 3; i++)
+    if (!accel_init())
+      break;
+  // Turn off accelerometer if threshold is zero
+  if (accelThreshold <= 0)
+    (void) accel_powerdown();
+#endif
 
   // Set FMDN advertising data
   switch_fmdn_key(0);
@@ -591,6 +689,10 @@ int main(void)
 	switch_airtag_key(currentKey);
   if (flagAirtag || flagFmdn)
     set_MAC_addr(bleAddr);
+  else
+    if (settingsMAC[0] != 0 && settingsMAC[5] != 0)
+      set_MAC_addr(settingsMAC);
+
   broadcastingAnything = 0;
   broadcastingAirtag = 0;
   broadcastingFmdn = 0;
@@ -718,6 +820,22 @@ int main(void)
 					badPower = 0;
 				#endif
       }
+
+      // Will shutdown after few minutes if no keys loaded and not in charging mode
+      #ifdef SHUTDOWN_NOKEYS
+      if (!flagAirtag && !flagFmdn && !check_charging() && (k_uptime_seconds() > SHUTDOWN_NOKEYS)) {
+        printk("No keys loaded, shutting down!\n");
+        blink_led(2);
+        #ifdef USE_BQ25121A
+        bq2512x_shipmode();
+        #endif
+        sys_poweroff();
+        // Never should reach this but who knows...
+        k_sleep(K_MSEC(4000));
+        reset_MCU();
+      }
+      #endif
+
       
       // Switch to settings mode every minute for few seconds
       if (k_uptime_seconds() >= (tLastSettingsMode + INTERVAL_SETTINGS)) {
@@ -795,6 +913,19 @@ int main(void)
         broadcast();
         continue;
       }
+
+      #ifdef USE_ACCELEROMETER
+      // Do we have to read accelerometer (every 20 seconds)?
+      if ((accelThreshold > 0) && (k_uptime_seconds() >= (tLastAccelRead + INTERVAL_ACCELEROMETER))) {
+        (void) accel_read();
+        tLastAccelRead = k_uptime_seconds();
+        // Re-init accelerometer every 30 read cycles
+        if (k_uptime_seconds() >= (tLastAccelReset + INTERVAL_ACCELEROMETER * 30)) {
+          (void) accel_init();
+          tLastAccelReset = k_uptime_seconds();
+        }
+      }
+      #endif
     }
   }
 	return 0;

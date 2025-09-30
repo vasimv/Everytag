@@ -7,5 +7,5 @@ zephyr_compile_definitions(DEVELOP_IN_NRF52832)
 zephyr_compile_definitions(NRFX_COREDEP_DELAY_US_LOOP_CYCLES=3)
 
 zephyr_library()
-zephyr_library_sources(board.c)
+#zephyr_library_sources(board.c)
 

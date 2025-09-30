@@ -2,5 +2,5 @@
 # SPDX-License-Identifier: Apache-2.0
 
 config BOARD_WB_20241125
-	bool "wb_20241007"
+	bool "wb_20241125"
 	select SOC_NRF52833_QDAA

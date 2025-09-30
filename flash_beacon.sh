@@ -17,10 +17,10 @@ echo "Requires sudo for for mcumgr"
 sudo echo ""
 
 echo "Switching to mcumgr mode with write_beacon.py"
-python3 ./write_beacon.py  -i "$ADDR" -a "$AUTH"
+python3 ./conn_beacon.py  -i "$ADDR" -a "$AUTH"
 echo ""
 
-sleep 10
+sleep 1
 HCIDEV=`sudo hcitool dev | tail -n 1 |awk '{print $1;}'|sed s/'^.*\([0-9]\)'/'\1'/`
 
 echo "Checking image list"

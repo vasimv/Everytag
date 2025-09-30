@@ -12,7 +12,7 @@
 #define SETTINGS_ADV_INTERVAL 400
 
 // How often we save current time in NVS (seconds)
-#define INTERVAL_TIMESAVE 600
+#define INTERVAL_TIMESAVE 3600
 
 // How often we check battery (seconds)
 #define INTERVAL_BATTERYCHECK 60
@@ -42,6 +42,8 @@
 
 #ifdef CONFIG_BOARD_KKM_K4P
 #define HAS_I2C_LIS2DW12
+#define USE_ACCELEROMETER
+#define USE_LIS2DW12
 #endif
 
 #ifdef CONFIG_BOARD_WB_20241125
@@ -50,6 +52,9 @@
 #define USE_BQ25121A
 #define BATTERY_UVLO_SHUTDOWN
 #define BATTERY_LIION
+// The beacon will issue shipping mode shutdown when no keys loaded after 5 minutes
+// Note: It will require BQ25121A's reset via charging to start working again
+#define SHUTDOWN_NOKEYS 300
 
 // Program BQ25121A to 2.5V output, 10mA charge current, 5mA precharge 
 #define SYS_VOLTAGE 2500

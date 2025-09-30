@@ -3,6 +3,7 @@
 
 /dts-v1/;
 #include <nordic/nrf52833_qdaa.dtsi>
+#include "kkm_k4p-pinctrl.dtsi"
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 
 / {
@@ -18,8 +19,12 @@
 	leds {
 		compatible = "gpio-leds";
 		led0: led_0 {
-			gpios = <&gpio0 4 GPIO_ACTIVE_HIGH>;
-			label = "led";
+			gpios = <&gpio0 3 GPIO_ACTIVE_HIGH>;
+			label = "led1";
+		};
+		led1: led_1 {
+			gpios = <&gpio0 31 GPIO_ACTIVE_HIGH>;
+			label = "led2";
 		};
 	};
 
@@ -54,7 +59,7 @@
 };
 
 &reg0 {
-  status = "okay";
+  status = "disabled";
 };
 
 &reg1 {
@@ -74,6 +79,20 @@
 
 &wdt {
   status = "okay";
+};
+
+&i2c0 {
+  compatible = "nordic,nrf-twim";
+  status = "okay";
+  clock-frequency = <I2C_BITRATE_FAST>;
+  pinctrl-0 = <&i2c0_default>;
+  pinctrl-1 = <&i2c0_sleep>;
+  pinctrl-names = "default", "sleep";
+  lis2dw12: lis2dw12@19 {
+    compatible = "i2c-device";
+    label = "LIS2DW12";
+    reg = <0x19>;
+  };
 };
 
 &adc {
