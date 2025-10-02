@@ -27,14 +27,14 @@ uint8_t authCode[8] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'};
 
 int flagFmdn = 0;
 int flagAirtag = 0;
-int multPeriod = 4;
-int txPower = 0;
-int changeInterval = 600;
+int multPeriod = 2;
+int txPower = 2;
+int changeInterval = 6000;
 int needsReset = 0;
 int pauseUpload = 0;
-int statusFlags = 0x438000;
+int statusFlags = 0x458000;
 int64_t timeOffset = 0;
-int accelThreshold = 0;
+int accelThreshold = 800;
 
 // Airtag keys
 int numKeys = ARRAY_SIZE(default_airtag_key);
@@ -531,20 +531,49 @@ int init_settings() {
       if (check_empty_key(keys_storage[i]))
         break;
     printk("Loaded %d keys from NVS storage\n", i);
-    if (i != 0) {
-      currentKeys = keys_storage;
-      numKeys = i;
-    } else {
-      printk("Zero keys in NVS record, switching to default keys\n");
-      currentKeys = default_airtag_key;
-      numKeys = ARRAY_SIZE(default_airtag_key);
+    numKeys = i;
+    currentKeys = keys_storage;
+  } else 
+    numKeys = 0;
+
+  if (numKeys == 0) {
+    int i;
+    int sum = 0;
+
+    printk("Zero keys in NVS record, checking default keys from public_keys.h\n");
+    numKeys = ARRAY_SIZE(default_airtag_key);
+    currentKeys = default_airtag_key;
+
+    for (i = 0; i < sizeof(default_airtag_key); i++)
+      sum += default_airtag_key[0][i];
+
+    // If not all bytes in public_keys.h are zero then use the key
+    if (sum != 0) {
+      printk("Airtag key(s) found in public_keys.h, using it\n");
+      flagAirtag = 1;
     }
   }
+
   // Load Google FMDN key or use default key (from public.h)
   if (my_nvs_read(ID_fmdnKey_NVS, fmdnKey, sizeof(fmdnKey))) {
     printk("No Google FMDN key in NVS, switching to default key\n");
     memcpy(fmdnKey, default_fmdn_key, sizeof(fmdnKey));
   }
+
+  // Check if FMDN key in public_keys.h is not zero then use it
+  if (!flagFmdn) {
+    int i;
+    int sum = 0;
+
+    for (i = 0; i < sizeof(fmdnKey); i++)
+      sum += default_fmdn_key[i];
+
+    if (sum != 0) {
+      printk("Google FMDN key found in public_keys.h, using it\n");
+      flagFmdn = 1;
+    }
+  }
+
   return 0;
 }
 
