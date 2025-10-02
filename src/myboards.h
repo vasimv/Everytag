@@ -89,9 +89,9 @@
 #define BATTERY_LOW_VOLTAGE 2400
 
 // Battery levels for Lithium non-rechargeable cells (in mV)
-#define BATTERY_LEVEL_FULL 3000
-#define BATTERY_LEVEL_NORMAL 2900
-#define BATTERY_LEVEL_LOW 2700
+#define BATTERY_LEVEL_FULL 3900
+#define BATTERY_LEVEL_NORMAL 3700
+#define BATTERY_LEVEL_LOW 3400
 #endif
 
 #endif
