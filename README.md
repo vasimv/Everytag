@@ -16,6 +16,12 @@ To query locations you can use FindMy scripts: https://github.com/biemster/FindM
 
 To create Google FMDN key and query locations, use this: https://github.com/leonboe1/GoogleFindMyTools
 
+## Hardware
+
+The firmware has support (see boards/ subdirectory) and tested on these boards and beacons: NRF52DK (nRF52832), NRF54L15DK (nRF54L15), KKM C2 (nRF52805), KKM K4P (K5) with accelerometer (nRF52833), KKM P1 (nRF52810), KKM P11 (nRF52810), Fanstel NRF52805EVM (nRF52805), Minew HCB22E (nRF52832). It has no support for buttons and second/other LEDs, it'll start right after flashing without ability to shutdown (except my own board with BQ25121A, see below) only one LED will blink on the start.
+
+Additionally, i've included my design of beacon that has Qi/WPC wireless charging support (nRF52833, BQ51013B, BQ25121A), see hardware/ subdirectory. The goal was to make small and very thin beacon (50x20x2mm with LIR2016 li-ion battery). You can order these assembled on PCBWay https://www.pcbway.com/project/shareproject/Small_and_thin_50x20x2mm_Bluetooth_beacon_with_Qi_WPC_wireless_charging_f97170e6.html (around 35 USD per board).
+
 ## Compilation
 Zephyr-based nRF Connect SDK 2.8.0 is required to compile the firmware.
 
