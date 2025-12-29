@@ -1,7 +1,7 @@
 # Everytag
 The firmware emulates Apple Airtag (up to 40 public keys rotating at default 10 minutes interval) and Google Find My Device (just one non-rotating key at the moment). It works on nRF52/54 chips and uses Zephyr. I've tried to optimize power consumption as much as could (microamperes range). MCU's watchdog is used to be sure it always works until battery dies.
 
-One of biggest advantages of the firmware is ability to reconfigure all of its settings via BLE (python script is included), so you can change keys, transmitting power, broadcasting interval and such without reflashing. To maximize power consumption, the firmware accepts connections to change settings only for 2 seconds every minute and has simple password protection.
+One of biggest advantages of the firmware is ability to reconfigure all of its settings via BLE (python script is included), so you can change keys, transmitting power, broadcasting interval and such without reflashing. To minimize power consumption, the firmware accepts connections to change settings only for 2 seconds every minute and has simple password protection.
 
 As beta test feature, it counts current time (if your board has 32.768kHz crystal) and saves current time to the flash periodically, so clock won't drift too much even if it gets reboot.
 
