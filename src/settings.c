@@ -35,6 +35,7 @@ int pauseUpload = 0;
 int statusFlags = 0x458000;
 int64_t timeOffset = 0;
 int accelThreshold = 800;
+int turnedOn = 0;
 
 // Airtag keys
 int numKeys = ARRAY_SIZE(default_airtag_key);
@@ -143,6 +144,7 @@ int updateKeysAtDisconnect = 0;
 #define ID_settingsMAC_NVS 0x0a
 #define ID_status_NVS 0x0b
 #define ID_accel_NVS 0x0c
+#define ID_turnedOn_NVS 0x0d
 
 // GAP callbacks
 static void connected(struct bt_conn *conn, uint8_t err) {
@@ -412,6 +414,11 @@ static ssize_t chrc_write_fmdnKey(struct bt_conn *conn,
   return len;
 }
 
+// Update turnedOn status in NVS (after button pressed to wake up)
+void update_turnedOn() {
+  (void) nvs_write(&fs, ID_turnedOn_NVS, &turnedOn, sizeof(turnedOn));
+}
+
 // GATT Attributes Table
 BT_GATT_SERVICE_DEFINE(
   beacon_svc, BT_GATT_PRIMARY_SERVICE(&beacon_svc_uuid),
@@ -520,6 +527,7 @@ int init_settings() {
   my_nvs_read(ID_status_NVS, &statusFlags, sizeof(statusFlags));
   my_nvs_read(ID_accel_NVS, &accelThreshold, sizeof(accelThreshold));
   my_nvs_read(ID_changeInterval_NVS, &changeInterval, sizeof(changeInterval));
+  my_nvs_read(ID_turnedOn_NVS, &turnedOn, sizeof(turnedOn));
   changeInterval = changeInterval - (changeInterval % 8);
   my_nvs_read(ID_auth_NVS, authCode, sizeof(authCode));
 

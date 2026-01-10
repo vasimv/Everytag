@@ -44,6 +44,15 @@
 #define HAS_I2C_LIS2DW12
 #define USE_ACCELEROMETER
 #define USE_LIS2DW12
+#define USE_BUTTON
+#endif
+
+#ifdef CONFIG_BOARD_KKM_C2_NRF52805
+#define USE_BUTTON
+#endif
+
+#if defined(CONFIG_BOARD_NRF52DK_NRF52832)
+#define USE_BUTTON
 #endif
 
 #ifdef CONFIG_BOARD_WB_20241125

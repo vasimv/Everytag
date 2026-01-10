@@ -18,7 +18,9 @@ To create Google FMDN key and query locations, use this: https://github.com/leon
 
 ## Hardware
 
-The firmware has support (see boards/ subdirectory) and tested on these boards and beacons: NRF52DK (nRF52832), NRF54L15DK (nRF54L15), KKM C2 (nRF52805), KKM K4P (K5) with accelerometer (nRF52833), KKM P1 (nRF52810), KKM P11 (nRF52810), Fanstel NRF52805EVM (nRF52805), Minew HCB22E (nRF52832). It has no support for buttons and second/other LEDs, it'll start right after flashing without ability to shutdown (except my own board with BQ25121A, see below) only one LED will blink on the start.
+The firmware has support (see boards/ subdirectory) and tested on these boards and beacons: NRF52DK (nRF52832), NRF54L15DK (nRF54L15), KKM C2 (nRF52805), KKM K4P (K5) with accelerometer (nRF52833), KKM P1 (nRF52810), KKM P11 (nRF52810), Fanstel NRF52805EVM (nRF52805), Minew HCB22E (nRF52832). For NRF52DK, KKM C2 and KKM K4P you will have to use button to turn it on after first flash. On other boards/beacons it'll start right after flashing. Only one LED will blink on the start (1 short, 2 long).
+
+Button (first one on NRF52DK board) can be used to turn off/on. Long press the button until 1 short + 2 long LED flashes to start it on. Same long press for shutdown, it'll do two short flashes and issue sys_poweroff(), less than one microampere in that state. Power on/off status is stored into flash, so it'll stay same after battery replacement (will blink once after installing new battery and return to sleep if was turned off).
 
 Additionally, i've included my design of beacon that has Qi/WPC wireless charging support (nRF52833, BQ51013B, BQ25121A), see hardware/ subdirectory. The goal was to make small and very thin beacon (50x20x2mm with LIR2016 li-ion battery). You can order these assembled on PCBWay https://www.pcbway.com/project/shareproject/Small_and_thin_50x20x2mm_Bluetooth_beacon_with_Qi_WPC_wireless_charging_f97170e6.html (around 35 USD per board).
 

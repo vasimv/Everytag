@@ -24,8 +24,10 @@
 #include <zephyr/pm/device.h>
 #include <zephyr/drivers/adc.h>
 #include <zephyr/drivers/i2c.h>
-
+#include <zephyr/drivers/timer/system_timer.h>
 #include <zephyr/sys/reboot.h>
+#include <zephyr/irq.h>
+#include <zephyr/drivers/hwinfo.h>
 
 #include "myboards.h"
 #include "settings.h"
@@ -73,7 +75,11 @@ static const struct i2c_dt_spec dev_i2c = I2C_DT_SPEC_GET(I2C0_NODE);
 const struct device *const i2c_dev = DEVICE_DT_GET(DT_NODELABEL(i2c0));
 #endif
 
-void blink_led(int num) {
+#ifdef USE_BUTTON
+static const struct gpio_dt_spec sw0 = GPIO_DT_SPEC_GET(DT_ALIAS(sw0), gpios);
+#endif
+
+void blink_led(int num, int fast) {
 	int err;
 
 #if CONFIG_GPIO
@@ -83,10 +89,10 @@ void blink_led(int num) {
 		printk("Warning: Can't turn on gpio0 (err %d)\n", err);
 #endif
 	gpio_pin_configure_dt(&led_spec, GPIO_OUTPUT_INACTIVE);
-	k_sleep(K_MSEC(1000));
+	k_sleep(fast ? K_MSEC(250) : K_MSEC(1000));
 	for (int i = 0; i < (2*num); i++) {
 		gpio_pin_toggle_dt(&led_spec);
-		k_sleep(K_MSEC(200));
+		k_sleep(fast ? K_MSEC(100) : K_MSEC(200));
 	}
 #if CONFIG_PM_DEVICE_RUNTIME
 	gpio_pin_configure_dt(&led_spec, GPIO_DISCONNECTED);
@@ -647,16 +653,47 @@ uint32_t tLastAccelRead = 0;
 uint32_t tLastAccelReset = 0;
 #endif
 
+// Power off (deep sleep) routine
+void my_poweroff() {
+  int err;
+
+  my_wdt_disable();
+#ifdef USE_BUTTON
+ 	err = gpio_pin_interrupt_configure_dt(&sw0, GPIO_INT_LEVEL_ACTIVE);
+	if (err < 0)
+		printk("Could not configure sw0 GPIO interrupt (%d)\n", err);
+#endif
+
+#ifdef USE_ACCELEROMETER
+  accel_powerdown();
+#endif
+  k_sleep(K_MSEC(500));
+  // sys_clock_disable is not defined for nRF54L15?
+  sys_clock_disable();
+  sys_poweroff();
+}
+
 int main(void)
 {
 	int err;
 	int badPower = 0;
+  int button_at_start = 0;
 	
 	my_wdt_init();
 
 	printk("Beacon starting\n");
 
-	blink_led(1);
+	blink_led(1, 1);
+#ifdef USE_BUTTON
+  /* Configure button pin */
+	err = gpio_pin_configure_dt(&sw0, GPIO_INPUT);
+	if (err < 0) {
+		printk("Could not configure sw0 GPIO (%d)\n", err);
+		return 0;
+	}
+  if (gpio_pin_get(sw0.port, sw0.pin) > 0)
+    button_at_start = 1;
+#endif
 
 #ifdef HAS_LED1_SWITCH
 	// Turn off mosfet
@@ -665,6 +702,23 @@ int main(void)
 
 	my_wdt_feed();
 	init_settings();
+
+#ifdef USE_BUTTON
+  // Check if wake up button is pressed or go to power down state
+  if (button_at_start) {
+    printk("Button is pressed, turning on!\n");
+    turnedOn = 1;
+    update_turnedOn();
+  } else {
+    // If we weren't turned on by button then go to sleep again
+    if (!turnedOn) {
+      printk("We are not turned on, sleep again!\n");
+      k_sleep(K_MSEC(500));
+      my_poweroff();
+      return 0;
+    }
+  }
+#endif
 
 #ifdef USE_BQ25121A
 	// Repeat twice at start to be sure the bq25121a received settings
@@ -707,11 +761,19 @@ int main(void)
 	
 	set_power(txPower);
 	my_wdt_feed();
-	blink_led(2);
+	blink_led(2, 0);
 
   // Broadcast ibeacon every 7..8 seconds if no airtag or fmdn
   if (!flagAirtag && !flagFmdn)
     broadcast_ibeacon();
+
+  #ifdef USE_BUTTON
+  // Wait for button release before getting into main loop
+  while (gpio_pin_get(sw0.port, sw0.pin) > 0) {
+    k_sleep(K_MSEC(1000));
+    my_wdt_feed();
+  }
+  #endif
 
 	while (1) {
     // In settings mode we do only 2 seconds delay
@@ -802,7 +864,8 @@ int main(void)
 							// Fully turn off the system through shipping mode
 							bq2512x_shipmode();
 							#endif
-							sys_poweroff();
+							my_poweroff();
+              return 0;
 							// Never should reach here but who knows... Turning off broadcasts, do nothing.
 							while (battery_voltage() < BATTERY_LOW_VOLTAGE) {
 								update_battery();
@@ -825,11 +888,11 @@ int main(void)
       #ifdef SHUTDOWN_NOKEYS
       if (!flagAirtag && !flagFmdn && !check_charging() && (k_uptime_seconds() > SHUTDOWN_NOKEYS)) {
         printk("No keys loaded, shutting down!\n");
-        blink_led(2);
+        blink_led(2, 1);
         #ifdef USE_BQ25121A
         bq2512x_shipmode();
         #endif
-        sys_poweroff();
+        my_poweroff();
         // Never should reach this but who knows...
         k_sleep(K_MSEC(4000));
         reset_MCU();
@@ -890,6 +953,31 @@ int main(void)
   			set_power(txPower);
   			broadcast();
       }
+
+      #ifdef USE_BUTTON
+      // Check if button is pressed and held, then turn off
+      if (gpio_pin_get(sw0.port, sw0.pin) > 0) {
+        k_sleep(K_MSEC(1000));
+        if (gpio_pin_get(sw0.port, sw0.pin) > 0) {
+          my_wdt_feed();
+          blink_led(2, 1);
+          // Wait for button to release
+          while (gpio_pin_get(sw0.port, sw0.pin) > 0) {
+            k_sleep(K_MSEC(500));
+            my_wdt_feed();
+          }
+          printk("Button was held and released, turning off!\n");
+          turnedOn = 0;
+          update_turnedOn();
+
+          k_sleep(K_MSEC(500));
+          bt_le_adv_stop();
+          bt_disable();
+          my_poweroff();
+          return 0;
+        }
+      }
+      #endif
 
       // Do we have even broadcast anything?
       if (!broadcastingAirtag && !broadcastingFmdn && (flagAirtag || flagFmdn)) {

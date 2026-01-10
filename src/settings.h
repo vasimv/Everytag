@@ -46,6 +46,9 @@ extern int accelThreshold;
 // MAC address in settings mode
 extern uint8_t settingsMAC[6];
 
+// Have we were turned on by button (if USE_BUTTON)?
+extern int turnedOn;
+
 // someone connected to the GATT (need some time to receive settings)
 extern int connectedGatt;
 
@@ -63,6 +66,9 @@ void stop_settings_adv();
 
 // Store current time in NVS
 void store_time();
+
+// Update turnedOn status in NVS (after button pressed to wake up)
+void update_turnedOn();
 
 // Returns time (in seconds), k_uptime_seconds()+offset
 int64_t get_time();

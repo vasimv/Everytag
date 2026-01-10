@@ -28,11 +28,24 @@
 		};
 	};
 
+	buttons {
+		compatible = "gpio-keys";
+		button0: button_0 {
+			gpios = <&gpio0 20 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+			label = "Push button switch 0";
+			zephyr,code = <INPUT_KEY_0>;
+		};
+  };
+
+ 	aliases {
+		sw0 = &button0;
+  };
+
   zephyr,user {
     io-channels = <&adc 0>;
   };
 };
-
+ 
 &flash0 {
 	partitions {
 		compatible = "fixed-partitions";
