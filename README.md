@@ -44,6 +44,8 @@ For nRF52DK/nrf52832 and nRF54L15DK - use nrf52832dk.overlay / nrf54l15dk.overla
 ## Running
 It is recommended to erase all flash memory before first run to reset NVS storage where the firmware stores its settings.
 
+Disconnect power source (remove battery) for 10-20 seconds and reconnect again after flashing or using RTT debug console, nrf chips often switch to high power consumption (up to few milliamps range) after using Jlink RTT interface and software reset doesn't help. So far, i haven't found way to avoid that.
+
 By default, the firmware will start broadcasting dummy iBeacon packets with 7 seconds interval at very low power (-8dBm) with TX power field set as battery voltage (like 31 is 3.1 volts). This broadcast will stop as soon as you load Apple Airtag and/or Google FMDN key.
 
 The beacon will use default MAC address (from MCU's registers programmed at factory) for iBeacon and settings broadcasts. You can figure out the address via debug console or using an BLE scanning app (nrfconnect from Nordic is quite good and free) on a smartphone.
