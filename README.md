@@ -44,7 +44,7 @@ For nRF52DK/nrf52832 and nRF54L15DK - use nrf52832dk.overlay / nrf54l15dk.overla
 ## Running
 It is recommended to erase all flash memory before first run to reset NVS storage where the firmware stores its settings.
 
-Disconnect power source (remove battery) for 10-20 seconds and reconnect again after flashing or using RTT debug console, nrf chips often switch to high power consumption (up to few milliamps range) after using Jlink RTT interface and software reset doesn't help. So far, i haven't found way to avoid that.
+Disconnect power source (remove battery) for 10-20 seconds and reconnect again after flashing through SWD or using RTT debug console, nrf chips often switch to high power consumption (up to few milliamps range) after using Jlink RTT interface and software reset doesn't help. So far, i haven't found way to avoid that.
 
 By default, the firmware will start broadcasting dummy iBeacon packets with 7 seconds interval at very low power (-8dBm) with TX power field set as battery voltage (like 31 is 3.1 volts). This broadcast will stop as soon as you load Apple Airtag and/or Google FMDN key.
 
@@ -75,4 +75,4 @@ This will connect to the beacon and synchronize its clock to current time.
 
 This will connect to the beacon and read current time
 
-To use OTA update feature, see flash_beacon.sh and flash_list.sh.
+To use OTA update feature, see flash_beacon.sh and flash_list.sh. Debug/lowpower versions of the mcumgr stuff may be uncompatible between each other, so you may get troubles with reflashing over bluetooth if flashed wrong version first. Settings are stored in separate region of flash/RRAM and they will be same after OTA, use full chip erase through SWD to get rid of old settings or use conn_beacon.py to program new ones.
