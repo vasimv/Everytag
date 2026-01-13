@@ -47,7 +47,7 @@
 #define USE_BUTTON
 #endif
 
-#ifdef CONFIG_BOARD_KKM_C2_NRF52805
+#ifdef CONFIG_BOARD_KKM_C2_NRF82805
 #define USE_BUTTON
 #endif
 
