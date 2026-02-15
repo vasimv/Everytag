@@ -1,0 +1,13 @@
+<resources>
+    <string-array name="tx_power_levels">
+        <item>Low</item>
+        <item>Normal</item>
+        <item>Max</item>
+    </string-array>
+
+    <string-array name="broadcast_periods">
+        <item>1 s</item>
+        <item>2 s</item>
+        <item>4 s</item>
+    </string-array>
+</resources>

@@ -51,7 +51,7 @@ By default, the firmware will start broadcasting dummy iBeacon packets with 7 se
 The beacon will use default MAC address (from MCU's registers programmed at factory) for iBeacon and settings broadcasts. You can figure out the address via debug console or using an BLE scanning app (nrfconnect from Nordic is quite good and free) on a smartphone.
 
 ## Changing settings via BLE
-Every minute it will switch into settings mode for 2 seconds (configurable) and settings (including keys) can be changed by conn_beacon.py script (requires python 3). Note, bluez isn't really perfect stack to work with BLE and the script may have troubles while connecting to the beacon. To fix that, you may try to disable/enable bluetooth or even reboot your computer.
+Every minute it will switch into settings mode for 2 seconds (configurable) and settings (including keys) can be changed by conn_beacon.py script (requires python 3) or by using android application that AI did generate for me (see below). Note, bluez isn't really perfect stack to work with BLE and the script may have troubles while connecting to the beacon. To fix that, you may try to disable/enable bluetooth or even reboot your computer.
 
 The script is used for:
 1. Changing its settings and/or writing current time to the beacon
@@ -76,3 +76,10 @@ This will connect to the beacon and synchronize its clock to current time.
 This will connect to the beacon and read current time
 
 To use OTA update feature, see flash_beacon.sh and flash_list.sh. Debug/lowpower versions of the mcumgr stuff may be uncompatible between each other, so you may get troubles with reflashing over bluetooth if flashed wrong version first. Settings are stored in separate region of flash/RRAM and they will be same after OTA, use full chip erase through SWD to get rid of old settings or use conn_beacon.py to program new ones.
+
+## Using android application to change settings
+Check subdirectory tagcheck for the android application. I have around zero knowledge about the android application development, so ChatGPT did wrote it for me. Sorry for its general ugliness, i'm not an UI guy. This is AndroidStudio project and you can compile it by yourself or use apk included.
+
+"SCAN BLE" functionality will find all BLE stuff with RSSI is bigger than specififed value. This will help to find MAC address of your beacon (place it very close to the phone's bluetooth antenna, so RSSI will be bigger). You can tap on one of scanned results to fill target's MAC address to send settings instead of typing MAC manually.
+
+On settings screen you can choose which settings to update on the Everytag beacon by activating their respective checkboxes. You have to set target MAC address and password (authorization code) to be able to reconfigure beacon. You will need to upload an airtag keyfile to the phone to change its broadcast key.
