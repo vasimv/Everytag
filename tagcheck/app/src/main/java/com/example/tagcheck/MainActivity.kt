@@ -31,6 +31,9 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, ScanActivity::class.java))
         }
 
+        binding.btnFirmware.setOnClickListener {
+            startActivity(Intent(this, FirmwareActivity::class.java))
+        }
         // Check right after main menu is shown.
         updateLocationWarning()
         requestLocationIfNeeded()

@@ -83,3 +83,5 @@ Check subdirectory tagcheck for the android application. I have around zero know
 "SCAN BLE" functionality will find all BLE stuff with RSSI is bigger than specififed value. This will help to find MAC address of your beacon (place it very close to the phone's bluetooth antenna, so RSSI will be bigger). You can tap on one of scanned results to fill target's MAC address to send settings instead of typing MAC manually.
 
 On settings screen you can choose which settings to update on the Everytag beacon by activating their respective checkboxes. You have to set target MAC address and password (authorization code) to be able to reconfigure beacon. You will need to upload an airtag keyfile to the phone to change its broadcast key.
+
+"Firmware Update" will upgrade firmware through BLE, you have to upload zephyr.signed.bin to your phone first.

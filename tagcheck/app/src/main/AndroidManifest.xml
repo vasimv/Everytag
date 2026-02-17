@@ -23,6 +23,6 @@
         <activity android:name=".SettingsActivity" android:exported="false"/>
         <activity android:name=".ScanActivity" android:exported="false"/>
         <activity android:name=".ConnectActivity" android:exported="false"/>
-
+        <activity android:name=".FirmwareActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
     </application>
 </manifest>
