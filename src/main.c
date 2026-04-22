@@ -844,6 +844,8 @@ int main(void)
         update_battery();      
         // Update status byte in airtag and fmdn
         update_status_byte();
+        if (flagAirtag)
+          switch_airtag_key(currentKey);
         if (flagAirtag || flagFmdn)
           broadcast();
 
